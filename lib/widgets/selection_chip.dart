@@ -21,6 +21,7 @@ class SelectionChip extends StatelessWidget {
       padding: chipConfig.padding,
       label: Text(item.label),
       shape: RoundedRectangleBorder(
+        side: chipConfig.borderSide,
         borderRadius: BorderRadius.circular(chipConfig.radius),
       ),
       deleteIcon: chipConfig.deleteIcon,

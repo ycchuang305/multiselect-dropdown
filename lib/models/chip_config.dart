@@ -6,6 +6,8 @@ import '../enum/app_enums.dart';
 /// [padding] is the padding of the chip.
 /// [radius] is the radius of the chip. Defaults to [BorderRadius.circular(18)].
 ///
+/// [borderSide] is the borderSide of the chip, default is BorderSide.none
+///
 /// [labelStyle] is the style of the label.
 /// [labelPadding] is the padding of the label.
 ///
@@ -47,6 +49,8 @@ class ChipConfig {
   final EdgeInsets padding;
   final EdgeInsets labelPadding;
 
+  final BorderSide borderSide;
+
   final double radius;
   final double spacing;
   final double runSpacing;
@@ -66,6 +70,7 @@ class ChipConfig {
     this.spacing = 8,
     this.runSpacing = 8,
     this.separator,
+    this.borderSide = BorderSide.none,
     this.labelColor = Colors.white,
     this.labelStyle,
     this.wrapType = WrapType.scroll,
