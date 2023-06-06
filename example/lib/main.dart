@@ -48,6 +48,23 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final List<ValueItem> _selectedOptions = [];
 
+  final List<ValueItem> _selectedOptions2 = [];
+
+  static const groupOptions = <ValueItem>[
+    ValueItem(
+        label: 'Group header 1',
+        value: '1',
+        groupValue: 'a',
+        isGroupHeader: true),
+    ValueItem(label: 'member 1', value: '2', groupValue: 'a'),
+    ValueItem(label: 'member 2', value: '3', groupValue: 'a'),
+    ValueItem(label: 'member 3', value: '4', groupValue: 'a'),
+    ValueItem(label: 'Option 1', value: '5'),
+    ValueItem(label: 'Option 2', value: '6'),
+    ValueItem(label: 'Option 3', value: '7'),
+    ValueItem(label: 'Option 4', value: '8'),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -205,6 +222,54 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             const SizedBox(
               height: 50,
+            ),
+            const Text('Custom option item builder',
+                style: MyHomePage._headerStyle),
+            const SizedBox(
+              height: 4,
+            ),
+            MultiSelectDropDown(
+              onOptionSelected: (options) {
+                debugPrint(options.toString());
+                setState(() {
+                  _selectedOptions2.clear();
+                  _selectedOptions2.addAll(options);
+                });
+              },
+              options: groupOptions,
+              optionItemBuilder: (context, index, isSelected,
+                  groupHeaderTristate, option, onPressed) {
+                return GestureDetector(
+                  onTap: onPressed,
+                  behavior: HitTestBehavior.translucent,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Checkbox(
+                        value: option.isGroupHeader
+                            ? groupHeaderTristate
+                            : isSelected,
+                        tristate: true,
+                        onChanged: (_) {
+                          onPressed.call();
+                        },
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        option.label,
+                        style: const TextStyle(
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              selectionType: SelectionType.multi,
+              chipConfig: const ChipConfig(wrapType: WrapType.wrap),
+              dropdownHeight: 400,
+              optionTextStyle: const TextStyle(fontSize: 16),
+              selectedOptionIcon: const Icon(Icons.check_circle),
             ),
           ],
         ),

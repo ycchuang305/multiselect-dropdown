@@ -36,6 +36,9 @@ class MultiSelectDropDown extends StatefulWidget {
   final List<ValueItem> options;
   final List<ValueItem> selectedOptions;
   final List<ValueItem> disabledOptions;
+  final Widget Function(
+          BuildContext, int, bool, bool?, ValueItem, VoidCallback)?
+      optionItemBuilder;
 
   final OnOptionSelected? onOptionSelected;
 
@@ -97,6 +100,8 @@ class MultiSelectDropDown extends StatefulWidget {
   /// [selectedOptions] is the list of options that are pre-selected when the widget is first displayed. The options need to be of type [ValueItem].
   ///
   /// [disabledOptions] is the list of options that the user cannot select. The options need to be of type [ValueItem]. If the items in this list are not available in options, will be ignored.
+  ///
+  /// [optionItemBuilder] is the builder that is used to build the option in the dropdown list. If this is not provided, the default builder is used.
   ///
   /// [onOptionSelected] is the callback that is called when an option is selected or unselected. The callback takes one argument of type `List<ValueItem>`.
   ///
@@ -218,7 +223,8 @@ class MultiSelectDropDown extends StatefulWidget {
       this.radiusGeometry,
       this.showClearIcon = true,
       this.focusNode,
-      this.controller})
+      this.controller,
+      this.optionItemBuilder})
       : networkConfig = null,
         responseParser = null,
         responseErrorBuilder = null,
@@ -267,6 +273,7 @@ class MultiSelectDropDown extends StatefulWidget {
     this.showClearIcon = true,
     this.focusNode,
     this.controller,
+    this.optionItemBuilder,
   })  : options = const [],
         super(key: key);
 
@@ -377,7 +384,8 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
     }
 
     // If the selected options are changed externally, then the selected options are updated.
-    if (listEquals(widget.selectedOptions, oldWidget.selectedOptions) == false) {
+    if (listEquals(widget.selectedOptions, oldWidget.selectedOptions) ==
+        false) {
       debugPrint(
           'didUpdateWidget: ${widget.selectedOptions}, ${oldWidget.selectedOptions}');
       _selectedOptions.clear();
@@ -390,7 +398,8 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
     }
 
     // If the disabled options are changed externally, then the disabled options are updated.
-    if (listEquals(widget.disabledOptions, oldWidget.disabledOptions) == false) {
+    if (listEquals(widget.disabledOptions, oldWidget.disabledOptions) ==
+        false) {
       _disabledOptions.clear();
       _disabledOptions.addAll(widget.disabledOptions);
 
@@ -661,6 +670,96 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
       List<ValueItem> selectedOptions = [..._selectedOptions];
 
       return StatefulBuilder(builder: ((context, dropdownState) {
+        void removeOption(ValueItem option) {
+          dropdownState(() {
+            selectedOptions.remove(option);
+          });
+          setState(() {
+            _selectedOptions.remove(option);
+          });
+        }
+
+        void removeGroupMembers(ValueItem option) {
+          dropdownState(() {
+            selectedOptions
+                .removeWhere((e) => e.groupValue == option.groupValue);
+          });
+          setState(() {
+            _selectedOptions
+                .removeWhere((e) => e.groupValue == option.groupValue);
+          });
+        }
+
+        void addGroupMembers(ValueItem option) {
+          final groupMembers = options
+              .where(
+                  (e) => e.groupValue == option.groupValue && !e.isGroupHeader)
+              .toList();
+          dropdownState(() {
+            selectedOptions.addAll(groupMembers);
+          });
+          setState(() {
+            _selectedOptions.addAll(groupMembers);
+          });
+        }
+
+        void addOption(ValueItem option) {
+          dropdownState(() {
+            selectedOptions.add(option);
+          });
+          setState(() {
+            _selectedOptions.add(option);
+          });
+        }
+
+        void selectSingleOption(ValueItem option) {
+          dropdownState(() {
+            selectedOptions.clear();
+            selectedOptions.add(option);
+          });
+          setState(() {
+            _selectedOptions.clear();
+            _selectedOptions.add(option);
+          });
+        }
+
+        void updateController() {
+          if (_controller != null) {
+            _controller!.value._selectedOptions.clear();
+            _controller!.value._selectedOptions.addAll(_selectedOptions);
+          }
+        }
+
+        void handleGroupHeaderOption(ValueItem option) {
+          final isGroupMemberSelected =
+              _selectedOptions.any((e) => e.groupValue == option.groupValue);
+          if (isGroupMemberSelected) {
+            removeGroupMembers(option);
+          } else {
+            addGroupMembers(option);
+          }
+        }
+
+        bool? getGroupHeaderTristateValue(ValueItem option) {
+          if (option.groupValue != null) {
+            final areAllSelected = options
+                    .where((e) =>
+                        !e.isGroupHeader && e.groupValue == option.groupValue)
+                    .length ==
+                _selectedOptions
+                    .where((e) => e.groupValue == option.groupValue)
+                    .length;
+            final hasAnyGroupMemberSelected =
+                _selectedOptions.any((e) => e.groupValue == option.groupValue);
+            return areAllSelected
+                ? true
+                : hasAnyGroupMemberSelected
+                    ? null
+                    : false;
+          }
+          return null;
+        }
+
         return Stack(
           children: [
             Positioned.fill(
@@ -691,65 +790,60 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
                         final option = options[index];
                         final isSelected = selectedOptions.contains(option);
                         final primaryColor = Theme.of(context).primaryColor;
-
-                        return ListTile(
-                            title: Text(option.label,
-                                style: widget.optionTextStyle ??
-                                    TextStyle(
-                                      fontSize: widget.hintFontSize,
-                                    )),
-                            textColor: Colors.black,
-                            focusColor: Colors.red,
-                            selectedColor:
-                                widget.selectedOptionTextColor ?? primaryColor,
-                            selected: isSelected,
-                            autofocus: true,
-                            dense: true,
-                            tileColor:
-                                widget.optionsBackgroundColor ?? Colors.white,
-                            selectedTileColor:
-                                widget.selectedOptionBackgroundColor ??
-                                    Colors.grey.shade200,
-                            enabled: !_disabledOptions.contains(option),
-                            onTap: () {
-                              if (widget.selectionType == SelectionType.multi) {
-                                if (isSelected) {
-                                  dropdownState(() {
-                                    selectedOptions.remove(option);
-                                  });
-                                  setState(() {
-                                    _selectedOptions.remove(option);
-                                  });
-                                } else {
-                                  dropdownState(() {
-                                    selectedOptions.add(option);
-                                  });
-                                  setState(() {
-                                    _selectedOptions.add(option);
-                                  });
-                                }
+                        void onPressed() {
+                          if (widget.selectionType == SelectionType.multi) {
+                            if (isSelected) {
+                              removeOption(option);
+                            } else {
+                              if (option.isGroupHeader) {
+                                handleGroupHeaderOption(option);
                               } else {
-                                dropdownState(() {
-                                  selectedOptions.clear();
-                                  selectedOptions.add(option);
-                                });
-                                setState(() {
-                                  _selectedOptions.clear();
-                                  _selectedOptions.add(option);
-                                });
-                                _focusNode.unfocus();
+                                addOption(option);
                               }
+                            }
+                          } else {
+                            selectSingleOption(option);
+                            _focusNode.unfocus();
+                          }
 
-                              if (_controller != null) {
-                                _controller!.value._selectedOptions.clear();
-                                _controller!.value._selectedOptions
-                                    .addAll(_selectedOptions);
-                              }
+                          updateController();
 
-                              widget.onOptionSelected?.call(_selectedOptions);
-                            },
-                            trailing:
-                                _getSelectedIcon(isSelected, primaryColor));
+                          widget.onOptionSelected?.call(_selectedOptions);
+                        }
+
+                        if (widget.optionItemBuilder != null) {
+                          final groupHeaderTristateValue =
+                              getGroupHeaderTristateValue(option);
+                          return widget.optionItemBuilder!.call(
+                              context,
+                              index,
+                              isSelected,
+                              groupHeaderTristateValue,
+                              option,
+                              onPressed);
+                        }
+                        return ListTile(
+                          title: Text(option.label,
+                              style: widget.optionTextStyle ??
+                                  TextStyle(
+                                    fontSize: widget.hintFontSize,
+                                  )),
+                          textColor: Colors.black,
+                          focusColor: Colors.red,
+                          selectedColor:
+                              widget.selectedOptionTextColor ?? primaryColor,
+                          selected: isSelected,
+                          autofocus: true,
+                          dense: true,
+                          tileColor:
+                              widget.optionsBackgroundColor ?? Colors.white,
+                          selectedTileColor:
+                              widget.selectedOptionBackgroundColor ??
+                                  Colors.grey.shade200,
+                          enabled: !_disabledOptions.contains(option),
+                          onTap: onPressed,
+                          trailing: _getSelectedIcon(isSelected, primaryColor),
+                        );
                       },
                     ),
                   )),

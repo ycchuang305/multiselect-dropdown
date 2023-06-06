@@ -2,6 +2,10 @@ import 'dart:convert';
 
 /// [label] is the item that is displayed in the list. [value] is the value that is returned when the item is selected.
 /// If the [value] is not provided, the [label] is used as the value.
+///
+/// if [groupValue] is given, the [ValueItem] with the same [groupValue] can be all selected/unselected
+/// by the [ValueItem] where its [isGroupHeader] is being set to true
+///
 /// An example of a [ValueItem] is:
 /// ```dart
 /// const ValueItem(label: 'Option 1', value: '1')
@@ -14,13 +18,22 @@ class ValueItem {
   /// The value of the value item
   final String? value;
 
+  final String? groupValue;
+
+  final bool isGroupHeader;
+
   /// Default constructor for [ValueItem]
-  const ValueItem({required this.label, this.value});
+  const ValueItem({
+    required this.label,
+    this.value,
+    this.groupValue,
+    this.isGroupHeader = false,
+  });
 
   /// toString method for [ValueItem]
   @override
   String toString() {
-    return 'ValueItem(label: $label, value: $value)';
+    return 'ValueItem(label: $label, value: $value, groupValue: $groupValue, isGroupHeader: $isGroupHeader)';
   }
 
   /// toMap method for [ValueItem]
@@ -28,6 +41,8 @@ class ValueItem {
     return {
       'label': label,
       'value': value,
+      'groupValue': groupValue,
+      'isGroupHeader': isGroupHeader,
     };
   }
 
@@ -36,6 +51,8 @@ class ValueItem {
     return ValueItem(
       label: map['label'] ?? '',
       value: map['value'],
+      groupValue: map['groupValue'],
+      isGroupHeader: map['isGroupHeader'],
     );
   }
 
@@ -51,7 +68,11 @@ class ValueItem {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
-    return other is ValueItem && other.label == label && other.value == value;
+    return other is ValueItem &&
+        other.label == label &&
+        other.value == value &&
+        other.groupValue == groupValue &&
+        other.isGroupHeader == isGroupHeader;
   }
 
   /// Hashcode for [ValueItem]
@@ -62,10 +83,14 @@ class ValueItem {
   ValueItem copyWith({
     String? label,
     String? value,
+    String? groupValue,
+    bool? isGroupHeader,
   }) {
     return ValueItem(
       label: label ?? this.label,
       value: value ?? this.value,
+      groupValue: groupValue ?? this.groupValue,
+      isGroupHeader: isGroupHeader ?? this.isGroupHeader,
     );
   }
 }
