@@ -6,26 +6,29 @@ class HintText extends StatelessWidget {
   final TextStyle? hintStyle;
   final String hintText;
   final Color? hintColor;
+  final TextStyle? floatingHintStyle;
+  final bool isFloating;
 
   const HintText({
     Key? key,
     this.hintStyle,
     required this.hintText,
     this.hintColor,
+    this.isFloating = false,
+    this.floatingHintStyle,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-      child: Text(
-        hintText,
-        style: hintStyle ??
-            TextStyle(
-              fontSize: 13,
-              color: hintColor ?? Colors.grey.shade300,
-            ),
-      ),
+    return Text(
+      hintText,
+      style: isFloating
+          ? floatingHintStyle
+          : hintStyle ??
+              TextStyle(
+                fontSize: 13,
+                color: hintColor ?? Colors.grey.shade300,
+              ),
     );
   }
 }

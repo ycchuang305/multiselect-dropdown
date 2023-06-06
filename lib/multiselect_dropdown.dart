@@ -31,6 +31,8 @@ class MultiSelectDropDown extends StatefulWidget {
   final Color? hintColor;
   final double? hintFontSize;
   final TextStyle? hintStyle;
+  final bool showHintOnItemSelected;
+  final TextStyle? floatingHintStyle;
 
   // Options
   final List<ValueItem> options;
@@ -151,6 +153,10 @@ class MultiSelectDropDown extends StatefulWidget {
   ///
   /// [hintStyle] is the style of the hint text.
   ///
+  /// [showHintOnItemSelected] if true, show the hint text on top of the dropdown field when any item is selected
+  ///
+  /// [floatingHintStyle] is the style of the hint when it's showing on top of the selected items
+  ///
   ///  **Example**
   ///
   /// ```dart
@@ -199,6 +205,7 @@ class MultiSelectDropDown extends StatefulWidget {
       this.hint = 'Select',
       this.hintColor = Colors.grey,
       this.hintFontSize = 14.0,
+      this.showHintOnItemSelected = false,
       this.selectedOptions = const [],
       this.disabledOptions = const [],
       this.alwaysShowOptionIcon = false,
@@ -214,6 +221,7 @@ class MultiSelectDropDown extends StatefulWidget {
       this.optionSeparator,
       this.inputDecoration,
       this.hintStyle,
+      this.floatingHintStyle,
       this.padding,
       this.focusedBorderColor = Colors.black54,
       this.borderColor = Colors.grey,
@@ -248,6 +256,7 @@ class MultiSelectDropDown extends StatefulWidget {
     this.hint = 'Select',
     this.hintColor = Colors.grey,
     this.hintFontSize = 14.0,
+    this.showHintOnItemSelected = false,
     this.selectedOptions = const [],
     this.disabledOptions = const [],
     this.alwaysShowOptionIcon = false,
@@ -263,6 +272,7 @@ class MultiSelectDropDown extends StatefulWidget {
     this.optionSeparator,
     this.inputDecoration,
     this.hintStyle,
+    this.floatingHintStyle,
     this.padding,
     this.borderColor = Colors.grey,
     this.focusedBorderColor = Colors.black54,
@@ -486,10 +496,40 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
 
     if (widget.selectionType == SelectionType.single &&
         !widget.showChipInSingleSelectMode) {
-      return SingleSelectedItem(label: _selectedOptions.first.label);
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 6),
+          HintText(
+            hintText: widget.hint,
+            hintColor: widget.hintColor,
+            hintStyle: widget.hintStyle,
+            floatingHintStyle: widget.floatingHintStyle,
+            isFloating: true,
+          ),
+          SingleSelectedItem(label: _selectedOptions.first.label),
+        ],
+      );
     }
 
-    return _buildSelectedItems();
+    return widget.showHintOnItemSelected
+        ? Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 6),
+              HintText(
+                hintText: widget.hint,
+                hintColor: widget.hintColor,
+                hintStyle: widget.hintStyle,
+                floatingHintStyle: widget.floatingHintStyle,
+                isFloating: true,
+              ),
+              _buildSelectedItems()
+            ],
+          )
+        : _buildSelectedItems();
   }
 
   /// return true if any item is selected.
