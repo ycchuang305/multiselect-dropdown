@@ -49,6 +49,7 @@ class MultiSelectDropDown extends StatefulWidget {
   final Color? selectedOptionTextColor;
   final Color? selectedOptionBackgroundColor;
   final Widget Function(BuildContext, ValueItem)? selectedItemBuilder;
+  final Widget Function(ValueItem)? chipLabelBuilder;
 
   // chip configuration
   final bool showChipInSingleSelectMode;
@@ -232,7 +233,8 @@ class MultiSelectDropDown extends StatefulWidget {
       this.showClearIcon = true,
       this.focusNode,
       this.controller,
-      this.optionItemBuilder})
+      this.optionItemBuilder,
+      this.chipLabelBuilder})
       : networkConfig = null,
         responseParser = null,
         responseErrorBuilder = null,
@@ -284,6 +286,7 @@ class MultiSelectDropDown extends StatefulWidget {
     this.focusNode,
     this.controller,
     this.optionItemBuilder,
+    this.chipLabelBuilder,
   })  : options = const [],
         super(key: key);
 
@@ -449,9 +452,11 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
             _toggleFocus();
           },
           child: Container(
-            height: widget.chipConfig.wrapType == WrapType.wrap ? null : 52,
             constraints: BoxConstraints(
               minWidth: MediaQuery.of(context).size.width,
+              maxHeight: widget.chipConfig.wrapType == WrapType.wrap
+                  ? double.infinity
+                  : 64,
               minHeight: 52,
             ),
             padding: _getContainerPadding(),
@@ -526,7 +531,12 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
                 floatingHintStyle: widget.floatingHintStyle,
                 isFloating: true,
               ),
-              _buildSelectedItems()
+              Flexible(
+                fit: widget.chipConfig.wrapType == WrapType.scroll
+                    ? FlexFit.tight
+                    : FlexFit.loose,
+                child: _buildSelectedItems(),
+              ),
             ],
           )
         : _buildSelectedItems();
@@ -585,7 +595,7 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
           if (widget.selectedItemBuilder != null) {
             return widget.selectedItemBuilder!(context, option);
           }
-          return _buildChip(option, widget.chipConfig);
+          return _buildChip(option, widget.chipConfig, widget.chipLabelBuilder);
         },
       );
     }
@@ -597,7 +607,8 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
             return widget.selectedItemBuilder!(
                 context, _selectedOptions[index]);
           }
-          return _buildChip(_selectedOptions[index], widget.chipConfig);
+          return _buildChip(_selectedOptions[index], widget.chipConfig,
+              widget.chipLabelBuilder);
         }).toList());
   }
 
@@ -629,10 +640,12 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
   }
 
   /// Buid the selected item chip.
-  Widget _buildChip(ValueItem item, ChipConfig chipConfig) {
+  Widget _buildChip(ValueItem item, ChipConfig chipConfig,
+      Widget Function(ValueItem)? chipLabelBuilder) {
     return SelectionChip(
       item: item,
       chipConfig: chipConfig,
+      chipLabelBuilder: chipLabelBuilder,
       onItemDelete: (removedItem) {
         if (_controller != null) {
           _controller!.clearSelection(removedItem);

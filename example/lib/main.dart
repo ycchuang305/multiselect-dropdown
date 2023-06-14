@@ -174,6 +174,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 ValueItem(label: 'Option 5', value: '5'),
                 ValueItem(label: 'Option 6', value: '6'),
               ],
+              showHintOnItemSelected: true,
+              chipLabelBuilder: (item) {
+                return SizedBox(
+                  height: 30,
+                  child: Center(child: Text('${item.label} !!')),
+                );
+              },
               selectionType: SelectionType.multi,
               chipConfig: const ChipConfig(wrapType: WrapType.scroll),
               dropdownHeight: 400,
@@ -265,6 +272,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 );
               },
+              showHintOnItemSelected: true,
               selectionType: SelectionType.multi,
               chipConfig: const ChipConfig(wrapType: WrapType.wrap),
               dropdownHeight: 400,

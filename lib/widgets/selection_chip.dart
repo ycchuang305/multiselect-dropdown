@@ -7,19 +7,21 @@ class SelectionChip extends StatelessWidget {
   final ChipConfig chipConfig;
   final Function(ValueItem) onItemDelete;
   final ValueItem item;
+  final Widget Function(ValueItem)? chipLabelBuilder;
 
   const SelectionChip({
     Key? key,
     required this.chipConfig,
     required this.item,
     required this.onItemDelete,
+    this.chipLabelBuilder,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Chip(
       padding: chipConfig.padding,
-      label: Text(item.label),
+      label: chipLabelBuilder?.call(item) ?? Text(item.label),
       shape: RoundedRectangleBorder(
         side: chipConfig.borderSide,
         borderRadius: BorderRadius.circular(chipConfig.radius),
