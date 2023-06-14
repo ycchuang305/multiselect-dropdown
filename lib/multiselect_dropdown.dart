@@ -433,8 +433,12 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
     var offset = renderBox?.localToGlobal(Offset.zero) ?? Offset.zero;
 
     final availableHeight = MediaQuery.of(context).size.height - offset.dy;
-
     return [size, availableHeight < widget.dropdownHeight];
+  }
+
+  Offset _getBoxOffset() {
+    RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+    return renderBox?.localToGlobal(Offset.zero) ?? Offset.zero;
   }
 
   @override
@@ -694,6 +698,8 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
 
   /// Create the overlay entry for the dropdown.
   OverlayEntry _buildOverlayEntry() {
+    const preservedOffsetFromTop = 30.0;
+
     // Calculate the offset and the size of the dropdown button
     final values = _calculateOffsetSize();
     // Get the size from the first item in the values list
@@ -702,22 +708,30 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
     final showOnTop = values[1] as bool;
 
     // Get the visual density of the theme
-    final visualDensity = Theme.of(context).visualDensity;
+    // final visualDensity = Theme.of(context).visualDensity;
 
     // Calculate the height of the tile
-    final tileHeight = 48.0 + visualDensity.vertical;
+    // final tileHeight = 48.0 + visualDensity.vertical;
     // Calculate the current height of the dropdown button
-    final currentHeight = tileHeight * _options.length;
+    // final currentHeight = tileHeight * _options.length;
 
     // Check if the dropdown height is less than the current height and greater than 0
-    final bool isScrollable =
-        widget.dropdownHeight < currentHeight && widget.dropdownHeight > 0;
+    // final bool isScrollable =
+    //     widget.dropdownHeight < currentHeight && widget.dropdownHeight > 0;
+
+    // Get box offset
+    final offset = _getBoxOffset();
+
+    final bool shouldMenuStickOnTop =
+        offset.dy < (widget.dropdownHeight + preservedOffsetFromTop);
+
     // Calculate the offset in the Y direction
     final offsetY = showOnTop
-        ? isScrollable
-            ? -widget.dropdownHeight - 5
-            : -currentHeight - 5
+        ? shouldMenuStickOnTop
+            ? -offset.dy + preservedOffsetFromTop
+            : -widget.dropdownHeight - 5
         : size.height + 5;
+
     return OverlayEntry(builder: (context) {
       List<ValueItem> options = _options;
       List<ValueItem> selectedOptions = [..._selectedOptions];
