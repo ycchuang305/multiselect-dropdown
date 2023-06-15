@@ -27,6 +27,9 @@ class MultiSelectDropDown extends StatefulWidget {
   // selection type of the dropdown
   final SelectionType selectionType;
 
+  // The height scale value (scaling by responsive framework), default will be 1.0
+  final double scaleHeight;
+
   // Hint
   final String hint;
   final Color? hintColor;
@@ -198,6 +201,7 @@ class MultiSelectDropDown extends StatefulWidget {
 
   const MultiSelectDropDown(
       {Key? key,
+      this.scaleHeight = 1.0,
       required this.onOptionSelected,
       required this.options,
       this.selectedOptionTextColor,
@@ -248,6 +252,7 @@ class MultiSelectDropDown extends StatefulWidget {
 
   const MultiSelectDropDown.network({
     Key? key,
+    this.scaleHeight = 1.0,
     required this.networkConfig,
     required this.responseParser,
     this.responseErrorBuilder,
@@ -437,7 +442,10 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
     var offset = renderBox?.localToGlobal(Offset.zero) ?? Offset.zero;
 
     final availableHeight = MediaQuery.of(context).size.height - offset.dy;
-    return [size, availableHeight < widget.dropdownHeight];
+    return [
+      size,
+      availableHeight < (widget.dropdownHeight * widget.scaleHeight)
+    ];
   }
 
   Offset _getBoxOffset() {
@@ -723,7 +731,8 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
     // Get box offset
     final offset = _getBoxOffset();
 
-    final visibleMenuHeight = min(currentHeight, widget.dropdownHeight);
+    final visibleMenuHeight =
+        min(currentHeight, (widget.dropdownHeight * widget.scaleHeight));
 
     final availableHeight = MediaQuery.of(context).size.height - offset.dy;
 
@@ -849,8 +858,8 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
               child: Material(
                   elevation: 4,
                   child: Container(
-                    constraints: BoxConstraints.loose(
-                        Size(size.width, widget.dropdownHeight)),
+                    constraints: BoxConstraints.loose(Size(size.width,
+                        (widget.dropdownHeight * widget.scaleHeight))),
                     child: Scrollbar(
                       thumbVisibility: true,
                       controller: _optionScrollController,
@@ -1013,8 +1022,8 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
                     elevation: 4,
                     child: Container(
                         width: size.width,
-                        constraints: BoxConstraints.loose(
-                            Size(size.width, widget.dropdownHeight)),
+                        constraints: BoxConstraints.loose(Size(size.width,
+                            (widget.dropdownHeight * widget.scaleHeight))),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
