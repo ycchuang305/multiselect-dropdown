@@ -732,9 +732,10 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
     final offset = _getBoxOffset();
 
     final visibleMenuHeight =
-        min(currentHeight, (widget.dropdownHeight * widget.scaleHeight));
+        min(currentHeight, widget.dropdownHeight * widget.scaleHeight);
 
-    final availableHeight = MediaQuery.of(context).size.height - offset.dy;
+    final availableHeight =
+        (MediaQuery.of(context).size.height - offset.dy) * widget.scaleHeight;
 
     final showOnTop = availableHeight < visibleMenuHeight;
 
@@ -743,8 +744,8 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
     // Calculate the offset in the Y direction
     final offsetY = showOnTop
         ? shouldMenuStickOnTop
-            ? -offset.dy + preservedOffsetFromTop
-            : -visibleMenuHeight - 5
+            ? -(offset.dy / widget.scaleHeight) + preservedOffsetFromTop
+            : -(visibleMenuHeight / widget.scaleHeight) - 5
         : size.height + 5;
 
     return OverlayEntry(builder: (context) {
