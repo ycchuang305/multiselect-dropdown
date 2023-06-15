@@ -858,8 +858,8 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
               child: Material(
                   elevation: 4,
                   child: Container(
-                    constraints: BoxConstraints.loose(Size(size.width,
-                        (widget.dropdownHeight * widget.scaleHeight))),
+                    constraints: BoxConstraints.loose(
+                        Size(size.width, widget.dropdownHeight)),
                     child: Scrollbar(
                       thumbVisibility: true,
                       controller: _optionScrollController,
@@ -1022,8 +1022,8 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
                     elevation: 4,
                     child: Container(
                         width: size.width,
-                        constraints: BoxConstraints.loose(Size(size.width,
-                            (widget.dropdownHeight * widget.scaleHeight))),
+                        constraints: BoxConstraints.loose(
+                            Size(size.width, widget.dropdownHeight)),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
