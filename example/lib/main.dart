@@ -80,6 +80,7 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 200),
               const Text('WRAP', style: MyHomePage._headerStyle),
               const SizedBox(
                 height: 4,
@@ -283,7 +284,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 showHintOnItemSelected: true,
                 selectionType: SelectionType.multi,
                 chipConfig: const ChipConfig(wrapType: WrapType.wrap),
-                dropdownHeight: 470,
+                dropdownHeight: 370,
                 optionTextStyle: const TextStyle(fontSize: 16),
                 selectedOptionIcon: const Icon(Icons.check_circle),
               ),

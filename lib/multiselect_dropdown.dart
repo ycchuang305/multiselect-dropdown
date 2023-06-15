@@ -1,6 +1,7 @@
 library multiselect_dropdown;
 
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -318,6 +319,9 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
   /// value notifier that is used for controller.
   MultiSelectController? _controller;
 
+  // Scroll controller for the dropdown list view
+  final ScrollController _optionScrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -582,6 +586,7 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
     if (_controller != null) {
       _controller!.dispose();
     }
+    _optionScrollController.dispose();
     super.dispose();
   }
 
@@ -705,31 +710,32 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
     // Get the size from the first item in the values list
     final size = values[0] as Size;
     // Get the showOnTop value from the second item in the values list
-    final showOnTop = values[1] as bool;
+    // final showOnTop = values[1] as bool;
 
     // Get the visual density of the theme
-    // final visualDensity = Theme.of(context).visualDensity;
+    final visualDensity = Theme.of(context).visualDensity;
 
     // Calculate the height of the tile
-    // final tileHeight = 48.0 + visualDensity.vertical;
+    final tileHeight = 48.0 + visualDensity.vertical;
     // Calculate the current height of the dropdown button
-    // final currentHeight = tileHeight * _options.length;
-
-    // Check if the dropdown height is less than the current height and greater than 0
-    // final bool isScrollable =
-    //     widget.dropdownHeight < currentHeight && widget.dropdownHeight > 0;
+    final currentHeight = tileHeight * _options.length;
 
     // Get box offset
     final offset = _getBoxOffset();
 
-    final bool shouldMenuStickOnTop =
-        offset.dy < (widget.dropdownHeight + preservedOffsetFromTop);
+    final visibleMenuHeight = min(currentHeight, widget.dropdownHeight);
+
+    final availableHeight = MediaQuery.of(context).size.height - offset.dy;
+
+    final showOnTop = availableHeight < visibleMenuHeight;
+
+    final bool shouldMenuStickOnTop = offset.dy < visibleMenuHeight;
 
     // Calculate the offset in the Y direction
     final offsetY = showOnTop
         ? shouldMenuStickOnTop
             ? -offset.dy + preservedOffsetFromTop
-            : -widget.dropdownHeight - 5
+            : -visibleMenuHeight - 5
         : size.height + 5;
 
     return OverlayEntry(builder: (context) {
@@ -845,73 +851,79 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
                   child: Container(
                     constraints: BoxConstraints.loose(
                         Size(size.width, widget.dropdownHeight)),
-                    child: ListView.separated(
-                      separatorBuilder: (context, index) {
-                        return widget.optionSeparator ??
-                            const SizedBox(height: 0);
-                      },
-                      shrinkWrap: true,
-                      padding: EdgeInsets.zero,
-                      itemCount: options.length,
-                      itemBuilder: (context, index) {
-                        final option = options[index];
-                        final isSelected = selectedOptions.contains(option);
-                        final primaryColor = Theme.of(context).primaryColor;
-                        void onPressed() {
-                          if (widget.selectionType == SelectionType.multi) {
-                            if (isSelected) {
-                              removeOption(option);
-                            } else {
-                              if (option.isGroupHeader) {
-                                handleGroupHeaderOption(option);
+                    child: Scrollbar(
+                      thumbVisibility: true,
+                      controller: _optionScrollController,
+                      child: ListView.separated(
+                        separatorBuilder: (context, index) {
+                          return widget.optionSeparator ??
+                              const SizedBox(height: 0);
+                        },
+                        controller: _optionScrollController,
+                        shrinkWrap: true,
+                        padding: EdgeInsets.zero,
+                        itemCount: options.length,
+                        itemBuilder: (context, index) {
+                          final option = options[index];
+                          final isSelected = selectedOptions.contains(option);
+                          final primaryColor = Theme.of(context).primaryColor;
+                          void onPressed() {
+                            if (widget.selectionType == SelectionType.multi) {
+                              if (isSelected) {
+                                removeOption(option);
                               } else {
-                                addOption(option);
+                                if (option.isGroupHeader) {
+                                  handleGroupHeaderOption(option);
+                                } else {
+                                  addOption(option);
+                                }
                               }
+                            } else {
+                              selectSingleOption(option);
+                              _focusNode.unfocus();
                             }
-                          } else {
-                            selectSingleOption(option);
-                            _focusNode.unfocus();
+
+                            updateController();
+
+                            widget.onOptionSelected?.call(_selectedOptions);
                           }
 
-                          updateController();
-
-                          widget.onOptionSelected?.call(_selectedOptions);
-                        }
-
-                        if (widget.optionItemBuilder != null) {
-                          final groupHeaderTristateValue =
-                              getGroupHeaderTristateValue(option);
-                          return widget.optionItemBuilder!.call(
-                              context,
-                              index,
-                              isSelected,
-                              groupHeaderTristateValue,
-                              option,
-                              onPressed);
-                        }
-                        return ListTile(
-                          title: Text(option.label,
-                              style: widget.optionTextStyle ??
-                                  TextStyle(
-                                    fontSize: widget.hintFontSize,
-                                  )),
-                          textColor: Colors.black,
-                          focusColor: Colors.red,
-                          selectedColor:
-                              widget.selectedOptionTextColor ?? primaryColor,
-                          selected: isSelected,
-                          autofocus: true,
-                          dense: true,
-                          tileColor:
-                              widget.optionsBackgroundColor ?? Colors.white,
-                          selectedTileColor:
-                              widget.selectedOptionBackgroundColor ??
-                                  Colors.grey.shade200,
-                          enabled: !_disabledOptions.contains(option),
-                          onTap: onPressed,
-                          trailing: _getSelectedIcon(isSelected, primaryColor),
-                        );
-                      },
+                          if (widget.optionItemBuilder != null) {
+                            final groupHeaderTristateValue =
+                                getGroupHeaderTristateValue(option);
+                            return widget.optionItemBuilder!.call(
+                                context,
+                                index,
+                                isSelected,
+                                groupHeaderTristateValue,
+                                option,
+                                onPressed);
+                          }
+                          return ListTile(
+                            title: Text(option.label,
+                                style: widget.optionTextStyle ??
+                                    TextStyle(
+                                      fontSize: widget.hintFontSize,
+                                    )),
+                            textColor: Colors.black,
+                            focusColor: Colors.red,
+                            selectedColor:
+                                widget.selectedOptionTextColor ?? primaryColor,
+                            selected: isSelected,
+                            autofocus: true,
+                            dense: true,
+                            tileColor:
+                                widget.optionsBackgroundColor ?? Colors.white,
+                            selectedTileColor:
+                                widget.selectedOptionBackgroundColor ??
+                                    Colors.grey.shade200,
+                            enabled: !_disabledOptions.contains(option),
+                            onTap: onPressed,
+                            trailing:
+                                _getSelectedIcon(isSelected, primaryColor),
+                          );
+                        },
+                      ),
                     ),
                   )),
             ),
