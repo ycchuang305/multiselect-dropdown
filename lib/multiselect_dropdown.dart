@@ -46,6 +46,9 @@ class MultiSelectDropDown extends StatefulWidget {
           BuildContext, int, bool, bool?, ValueItem, VoidCallback)?
       optionItemBuilder;
 
+  /// For override the click event, the dropdown won't triggered if this is non-null.
+  final void Function()? onClickOverride;
+
   final OnOptionSelected? onOptionSelected;
 
   // selected option
@@ -239,7 +242,8 @@ class MultiSelectDropDown extends StatefulWidget {
       this.focusNode,
       this.controller,
       this.optionItemBuilder,
-      this.chipLabelBuilder})
+      this.chipLabelBuilder,
+      this.onClickOverride})
       : networkConfig = null,
         responseParser = null,
         responseErrorBuilder = null,
@@ -293,6 +297,7 @@ class MultiSelectDropDown extends StatefulWidget {
     this.controller,
     this.optionItemBuilder,
     this.chipLabelBuilder,
+    this.onClickOverride,
   })  : options = const [],
         super(key: key);
 
@@ -465,7 +470,12 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
           splashColor: null,
           splashFactory: null,
           onTap: () {
-            _toggleFocus();
+            final onClick = widget.onClickOverride;
+            if (onClick == null) {
+              _toggleFocus();
+            } else {
+              onClick();
+            }
           },
           child: Container(
             constraints: BoxConstraints(
