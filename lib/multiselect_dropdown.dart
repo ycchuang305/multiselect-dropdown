@@ -6,20 +6,21 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import 'package:http/http.dart' as http;
 import 'package:multi_dropdown/models/network_config.dart';
 import 'package:multi_dropdown/widgets/hint_text.dart';
 import 'package:multi_dropdown/widgets/selection_chip.dart';
 import 'package:multi_dropdown/widgets/single_selected_item.dart';
-import 'package:http/http.dart' as http;
+import 'package:reorderables/reorderables.dart';
 
+import 'enum/app_enums.dart';
 import 'models/chip_config.dart';
 import 'models/value_item.dart';
-import 'enum/app_enums.dart';
 
 export 'enum/app_enums.dart';
 export 'models/chip_config.dart';
-export 'models/value_item.dart';
 export 'models/network_config.dart';
+export 'models/value_item.dart';
 
 typedef OnOptionSelected = void Function(List<ValueItem> selectedOptions);
 
@@ -82,6 +83,9 @@ class MultiSelectDropDown extends StatefulWidget {
   final double? focusedBorderWidth;
   final EdgeInsets? padding;
   final bool showClearIcon;
+
+  /// Make the chips can be reorder when [WrapType.wrap] is settle.
+  final bool draggableInWrapMode;
 
   // network configuration
   final NetworkConfig? networkConfig;
@@ -243,7 +247,8 @@ class MultiSelectDropDown extends StatefulWidget {
       this.controller,
       this.optionItemBuilder,
       this.chipLabelBuilder,
-      this.onClickOverride})
+      this.onClickOverride,
+      this.draggableInWrapMode = false})
       : networkConfig = null,
         responseParser = null,
         responseErrorBuilder = null,
@@ -298,6 +303,7 @@ class MultiSelectDropDown extends StatefulWidget {
     this.optionItemBuilder,
     this.chipLabelBuilder,
     this.onClickOverride,
+    this.draggableInWrapMode = false,
   })  : options = const [],
         super(key: key);
 
@@ -626,9 +632,29 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
         },
       );
     }
-    return Wrap(
+    return ReorderableWrap(
         spacing: widget.chipConfig.spacing,
         runSpacing: widget.chipConfig.runSpacing,
+        enableReorder: widget.draggableInWrapMode,
+        buildDraggableFeedback: (ctx, constraint, widget) {
+          return Material(
+            color: Colors.transparent,
+            child: Container(
+              color: Colors.transparent,
+              constraints: constraint,
+              child: widget,
+            ),
+          );
+        },
+        onReorder: (int oldIndex, int newIndex) {
+          setState(() {
+            _selectedOptions.insert(
+              newIndex,
+              _selectedOptions.removeAt(oldIndex),
+            );
+          });
+          widget.onOptionSelected?.call(_selectedOptions);
+        },
         children: mapIndexed(_selectedOptions, (index, item) {
           if (widget.selectedItemBuilder != null) {
             return widget.selectedItemBuilder!(
