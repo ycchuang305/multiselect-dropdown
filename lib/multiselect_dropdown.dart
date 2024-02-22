@@ -752,7 +752,7 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
     // Calculate the offset and the size of the dropdown button
     final values = _calculateOffsetSize();
     // Get the size from the first item in the values list
-    final size = values[0] as Size;
+    final dropdownBtnSize = values[0] as Size;
     // Get the showOnTop value from the second item in the values list
     // final showOnTop = values[1] as bool;
 
@@ -770,10 +770,14 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
     final visibleMenuHeight =
         min(currentHeight, widget.dropdownHeight * widget.scaleHeight);
 
-    final availableHeight =
-        (MediaQuery.of(context).size.height - offset.dy) * widget.scaleHeight;
+    final availableHeightBelowDropdownBtn =
+        (MediaQuery.of(context).size.height -
+                offset.dy -
+                dropdownBtnSize.height -
+                5) *
+            widget.scaleHeight;
 
-    final showOnTop = availableHeight < visibleMenuHeight;
+    final showOnTop = availableHeightBelowDropdownBtn < visibleMenuHeight;
 
     final bool shouldMenuStickOnTop = offset.dy < visibleMenuHeight;
 
@@ -782,7 +786,7 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
         ? shouldMenuStickOnTop
             ? -(offset.dy / widget.scaleHeight) + preservedOffsetFromTop
             : -(visibleMenuHeight / widget.scaleHeight) - 5
-        : size.height + 5;
+        : dropdownBtnSize.height + 5;
 
     return OverlayEntry(builder: (context) {
       List<ValueItem> options = _options;
@@ -896,7 +900,7 @@ class _MultiSelectDropDownState extends State<MultiSelectDropDown> {
                   elevation: 4,
                   child: Container(
                     constraints: BoxConstraints.loose(
-                        Size(size.width, widget.dropdownHeight)),
+                        Size(dropdownBtnSize.width, widget.dropdownHeight)),
                     child: Scrollbar(
                       thumbVisibility: true,
                       controller: _optionScrollController,
